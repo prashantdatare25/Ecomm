@@ -19,6 +19,8 @@ const handleSubmit = (e) => {
 
 return (
     <div style={{ maxWidth: 400, margin: 'auto', padding: 20 }}>
+
+        
         <h2>Sign Up</h2>
         <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: 10 }}>
@@ -56,6 +58,7 @@ return (
             </div>
             <button type="submit" style={{ padding: '8px 16px' }}>Sign Up</button>
         </form>
+        {/*  */}
     </div>
 );
 }
