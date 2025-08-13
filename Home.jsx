@@ -3,6 +3,7 @@ import React from 'react'
 function Home() {
   return (
     <div>
+    {/*  */}
         <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 2rem', background: '#f5f5f5' }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
                 <img src="https://via.placeholder.com/40x40?text=Logo" alt="Logo" style={{ marginRight: '0.5rem' }} />
