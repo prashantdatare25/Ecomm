@@ -1,147 +1,86 @@
-// ProductListingPage.tsx
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 
-interface Product {
-  id: number;
-  name: string;
-  category: string;
-  price: number;
-}
-
-const productsData: Product[] = [
-  { id: 1, name: "Red Shirt", category: "Clothing", price: 25 },
-  { id: 2, name: "Blue Jeans", category: "Clothing", price: 40 },
-  { id: 3, name: "Running Shoes", category: "Footwear", price: 60 },
-  { id: 4, name: "Sneakers", category: "Footwear", price: 55 },
-  { id: 5, name: "Laptop", category: "Electronics", price: 800 },
-  { id: 6, name: "Headphones", category: "Electronics", price: 120 },
-  { id: 7, name: "Backpack", category: "Accessories", price: 50 },
-  { id: 8, name: "Watch", category: "Accessories", price: 150 },
+const products = [
+  { id: 1, name: "Red Shoes", category: "Shoes", price: 50, rating: 4.5, inStock: true },
+  { id: 2, name: "Blue Hoodie", category: "Hoodies", price: 80, rating: 4.0, inStock: false },
+  { id: 3, name: "Green Tee", category: "Tees", price: 20, rating: 3.8, inStock: true },
+  { id: 4, name: "Cap", category: "Accessories", price: 15, rating: 4.2, inStock: true },
+  { id: 5, name: "Leather Bag", category: "Bags", price: 120, rating: 4.9, inStock: false },
 ];
 
-export default function ProductListingPage() {
+const categories = ["All", "Shoes", "Hoodies", "Tees", "Accessories", "Bags"];
+
+export default function PLP() {
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("");
-  const [sortBy, setSortBy] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4;
+  const [category, setCategory] = useState("All");
+  const [sort, setSort] = useState("relevance");
+  const [page, setPage] = useState(1);
+  const pageSize = 3;
 
-  const categories = ["Clothing", "Footwear", "Electronics", "Accessories"];
-
-  const filteredProducts = useMemo(() => {
-    let filtered = productsData;
-
-    if (search) {
-      filtered = filtered.filter((p) =>
+  const filtered = useMemo(() => {
+    let list = products.filter(
+      (p) =>
+        (category === "All" || p.category === category) &&
         p.name.toLowerCase().includes(search.toLowerCase())
-      );
-    }
+    );
+    if (sort === "price-asc") list.sort((a, b) => a.price - b.price);
+    if (sort === "price-desc") list.sort((a, b) => b.price - a.price);
+    if (sort === "rating") list.sort((a, b) => b.rating - a.rating);
+    return list;
+  }, [search, category, sort]);
 
-    if (category) {
-      filtered = filtered.filter((p) => p.category === category);
-    }
-
-    if (sortBy === "priceLowHigh") {
-      filtered = [...filtered].sort((a, b) => a.price - b.price);
-    } else if (sortBy === "priceHighLow") {
-      filtered = [...filtered].sort((a, b) => b.price - a.price);
-    }
-
-    return filtered;
-  }, [search, category, sortBy]);
-
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-  const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const totalPages = Math.ceil(filtered.length / pageSize);
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-4xl mx-auto space-y-4">
       {/* Search & Filters */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6 items-center">
+      <div className="flex gap-2 flex-wrap">
         <input
-          type="text"
-          placeholder="Search products..."
-          className="border rounded px-3 py-2 w-full md:w-1/3"
+          placeholder="Search..."
           value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setCurrentPage(1);
-          }}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border rounded px-2 py-1 flex-1"
         />
-
-        <select
-          className="border rounded px-3 py-2"
-          value={category}
-          onChange={(e) => {
-            setCategory(e.target.value);
-            setCurrentPage(1);
-          }}
-        >
-          <option value="">All Categories</option>
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
+        <select value={category} onChange={(e) => setCategory(e.target.value)} className="border rounded px-2 py-1">
+          {categories.map((c) => (
+            <option key={c}>{c}</option>
           ))}
         </select>
-
-        <select
-          className="border rounded px-3 py-2"
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-        >
-          <option value="">Sort By</option>
-          <option value="priceLowHigh">Price: Low to High</option>
-          <option value="priceHighLow">Price: High to Low</option>
+        <select value={sort} onChange={(e) => setSort(e.target.value)} className="border rounded px-2 py-1">
+          <option value="relevance">Relevance</option>
+          <option value="price-asc">Price ↑</option>
+          <option value="price-desc">Price ↓</option>
+          <option value="rating">Rating</option>
         </select>
       </div>
 
       {/* Products */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {paginatedProducts.map((product) => (
-          <div
-            key={product.id}
-            className="border rounded-lg p-4 shadow hover:shadow-lg transition"
-          >
-            <div className="h-40 bg-gray-200 rounded mb-4 flex items-center justify-center text-gray-500">
-              Image
-            </div>
-            <h3 className="font-semibold">{product.name}</h3>
-            <p className="text-sm text-gray-500">{product.category}</p>
-            <p className="mt-2 font-bold">${product.price}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {paginated.map((p) => (
+          <div key={p.id} className="border rounded p-3">
+            <h2 className="font-semibold">{p.name}</h2>
+            <p className="text-sm text-gray-500">{p.category}</p>
+            <p className="text-lg">${p.price}</p>
+            <p className="text-yellow-500">⭐ {p.rating}</p>
+            <p className={p.inStock ? "text-green-600" : "text-red-600"}>
+              {p.inStock ? "In Stock" : "Out of Stock"}
+            </p>
           </div>
         ))}
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-center mt-6 gap-2">
-        <button
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage((p) => p - 1)}
-          className="px-3 py-1 border rounded disabled:opacity-50"
-        >
-          Prev
-        </button>
-        {Array.from({ length: totalPages }).map((_, idx) => (
+      <div className="flex gap-2 justify-center">
+        {Array.from({ length: totalPages }, (_, i) => (
           <button
-            key={idx}
-            onClick={() => setCurrentPage(idx + 1)}
-            className={`px-3 py-1 border rounded ${
-              currentPage === idx + 1 ? "bg-blue-500 text-white" : ""
-            }`}
+            key={i}
+            onClick={() => setPage(i + 1)}
+            className={`px-3 py-1 border rounded ${page === i + 1 ? "bg-gray-200" : ""}`}
           >
-            {idx + 1}
+            {i + 1}
           </button>
         ))}
-        <button
-          disabled={currentPage === totalPages}
-          onClick={() => setCurrentPage((p) => p + 1)}
-          className="px-3 py-1 border rounded disabled:opacity-50"
-        >
-          Next
-        </button>
       </div>
     </div>
   );
