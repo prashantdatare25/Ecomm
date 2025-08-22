@@ -12,6 +12,8 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [captchaPassed, setCaptchaPassed] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [passwordStrength, setPasswordStrength] = useState("");
 
   const router = useRouter();
 
@@ -20,58 +22,59 @@ export default function LoginPage() {
 
   const isValidEmailOrPhone = validateEmail(emailOrPhone) || validatePhone(emailOrPhone);
 
+  const getPasswordStrength = (value) => {
+    if (value.length === 0) return "";
+    if (value.length < 6) return "Weak";
+    if (/^(?=.*[A-Z])(?=.*[0-9]).{6,}$/.test(value)) return "Strong";
+    return "Medium";
+  };
+
+  useEffect(() => {
+    setPasswordStrength(getPasswordStrength(password));
+  }, [password]);
+
   const handleLogin = (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     if (!isValidEmailOrPhone) {
-      setError("Please enter a valid email or phone number.");
+      setToastMessage("Please enter a valid email or phone number.");
       setLoading(false);
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long.");
+      setToastMessage("Password must be at least 6 characters long.");
       setLoading(false);
       return;
     }
 
-    // Captcha check if failed attempts >= 3
     if (failedAttempts >= 3 && !captchaPassed) {
-      setError("Please complete captcha to continue.");
+      setToastMessage("Please complete captcha to continue.");
       setLoading(false);
       return;
     }
 
     // Mock API call simulation
     setTimeout(() => {
-      if (emailOrPhone === "user@test.com" && password === "password") {
-        if (rememberMe) {
-          localStorage.setItem("authToken", "mockToken123");
-        } else {
-          sessionStorage.setItem("authToken", "mockToken123");
-        }
-        router.push("/dashboard");
+      if (emailOrPhone === "admin@test.com" && password === "password") {
+        const role = "admin";
+        if (rememberMe) localStorage.setItem("authToken", "mockToken123");
+        else sessionStorage.setItem("authToken", "mockToken123");
+        router.push(role === "admin" ? "/admin-dashboard" : "/user-dashboard");
+      } else if (emailOrPhone === "user@test.com" && password === "password") {
+        const role = "user";
+        if (rememberMe) localStorage.setItem("authToken", "mockToken123");
+        else sessionStorage.setItem("authToken", "mockToken123");
+        router.push(role === "admin" ? "/admin-dashboard" : "/user-dashboard");
       } else {
         setFailedAttempts((prev) => prev + 1);
-        setError("Invalid credentials. Please try again.");
+        setToastMessage("Invalid credentials. Please try again.");
       }
       setLoading(false);
     }, 1200);
   };
-
-  useEffect(() => {
-    if (error) {
-      const toast = document.createElement("div");
-      toast.className = "fixed bottom-4 right-4 bg-red-600 text-white px-4 py-2 rounded shadow-lg animate-bounce";
-      toast.innerText = error;
-      toast.setAttribute("role", "alert");
-      toast.setAttribute("aria-live", "assertive");
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    }
-  }, [error]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-4 text-white">
@@ -80,6 +83,17 @@ export default function LoginPage() {
         <img src="/logo.png" alt="Company Logo" className="h-10" />
         <a href="/" className="underline text-sm">Back to Home</a>
       </header>
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="fixed bottom-4 right-4 bg-red-600 text-white px-4 py-2 rounded shadow-lg animate-fade-in"
+        >
+          {toastMessage}
+        </div>
+      )}
 
       {/* Responsive Layout */}
       <div className="flex w-full max-w-5xl bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden">
@@ -135,6 +149,17 @@ export default function LoginPage() {
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
+              {passwordStrength && (
+                <p className={`mt-1 text-sm ${
+                  passwordStrength === "Weak"
+                    ? "text-red-400"
+                    : passwordStrength === "Medium"
+                    ? "text-yellow-400"
+                    : "text-green-400"
+                }`}>
+                  Strength: {passwordStrength}
+                </p>
+              )}
             </div>
 
             {/* Remember Me & Forgot Password */}
